@@ -1,0 +1,71 @@
+package cache
+
+import (
+	"api-handle/internal/model"
+	"api-handle/internal/services/utils"
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/redis/go-redis/v9"
+)
+
+var rdb *redis.Client
+
+func Init() {
+	rdb = redis.NewClient(&redis.Options{
+		Addr: "localhost:6379", // Endereço padrão do Redis. Mude conforme necessário.
+	})
+	_, err := rdb.Ping(context.Background()).Result()
+	if err != nil {
+		log.Fatalf("Fail on connect to Redis: %v", err)
+	}
+}
+
+func Set(key string, value string, expiration int) {
+	if utils.IsStringEmpty(value) || utils.IsStringEmpty(key) || expiration < 0 {
+		return
+	}
+
+	durationUtilExpire := time.Duration(expiration) * time.Second
+
+	err := rdb.Set(context.TODO(), key, value, durationUtilExpire).Err()
+
+	if err != nil {
+		log.Printf("Fail set value on redis: %s", err.Error())
+	}
+}
+
+func Retrieve(key string) (string, error) {
+	val, err := rdb.Get(context.TODO(), key).Result()
+
+	if err == redis.Nil {
+		return "", fmt.Errorf("Key not found")
+
+	} else if err != nil {
+		return "", fmt.Errorf("Error on retrieve value from redis: %v", err)
+
+	}
+
+	return val, nil
+}
+
+func IsOnCache(idempotenciaKey string) (model.CacheMessage, error) {
+	var result model.CacheMessage
+
+	data, err := Retrieve(idempotenciaKey)
+
+	if err != nil {
+		return result, err
+	}
+
+	err = json.Unmarshal([]byte(data), &result)
+
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
+}
