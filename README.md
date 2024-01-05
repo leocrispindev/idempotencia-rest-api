@@ -1,4 +1,11 @@
-# Idempotencia + Golang API
+<h1 align="center"> Idempotência + API Rest</h1>
+
+
+<p align="center">
+  <img src="image.jpeg"  width="300" height="300">
+</p>
+
+## Descrição
 
 Esta API exemplifica a prevenção de reprocessamento de requisições, assegurando a idempotência da aplicação e evitando a criação e processamento redundante de recursos. Ao garantir a correta utilização dos métodos HTTP, o projeto prioriza o tratamento do método não idempotente, ou seja, o POST.
 
