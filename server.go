@@ -3,13 +3,14 @@ package main
 import (
 	"api-handle/internal/controller"
 	"api-handle/internal/database"
+	"api-handle/internal/services/cache"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	database.Init()
-
+	cache.Init()
 	controller.Init()
 
 	r := gin.Default()
