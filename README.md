@@ -16,3 +16,24 @@ Idempotência refere-se à propriedade de uma operação onde repetir a operaç�
 | PUT         | Sim          | Atualiza um recurso ou cria se não existir.       |
 | DELETE      | Sim          | Remove um recurso.                               |
 | PATCH       | Não          | Modifica parcialmente um recurso.                 |
+
+## Problema
+
+A API foi projetada para gerenciar e armazenar mensagens trocadas entre usuários. Contudo, em determinadas circunstâncias, a mesma mensagem pode ser indevidamente associada a uma conversa mais de uma vez, comprometendo a integridade e a precisão dos registros.
+
+## Solução 
+
+A solução foi o envio de um header específico denominado "idempotencia-key", para garantir a singularidade, cada requisição o header recebe um valor diferente. Ao incluir este header em uma requisição, o sistema realiza um processo de validação dupla.
+
+### Primeira validação - Cache:
+Na primeira etapa, a API efetua uma consulta em um cache específico, verificando o status associado à chave fornecida no header. Esta consulta inicial permite uma resposta rápida e eficiente, determinando se a chave já foi previamente processada.
+
+#### Lista de Status
+* IN_PROCESS: a mensagem está em fase de processamento
+* PROCESSED: a mensagem já foi processada
+* ERROR_ON_PROCESS: ocorreu um erro durante o processamento
+
+
+### Segunda validação - Banco de Dados:
+Caso a chave não seja encontrada ou haja, ocorre a segunda etapa. 
+É realizada uma consulta ao banco de dados para garantir que a chave não foi processada, caso não seja encontrada, a mensagem é salva no banco de dados, garantindo assim a integridade e singularidade dos dados.
