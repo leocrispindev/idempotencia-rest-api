@@ -4,7 +4,6 @@ import (
 	messageDao "api-handle/internal/dao/message"
 	"api-handle/internal/model"
 	"api-handle/internal/services/cache"
-	"fmt"
 	"log"
 )
 
@@ -21,7 +20,7 @@ func ProccessMessage(message model.Message) error {
 		return nil
 	}
 
-	go saveOnCache(message.IdempotenciaKey, model.IN_PROCESS, "Message in process", 600) // 10 minutes cache duration
+	saveOnCache(message.IdempotenciaKey, model.IN_PROCESS, "Message in process", 600) // 10 minutes cache duration
 
 	err := messageDao.SaveMessage(message)
 
@@ -42,7 +41,7 @@ func messageAlreadyProcessed(key string) bool {
 	result, err := messageDao.AlreadyProcessed(key)
 
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 
 	return result
