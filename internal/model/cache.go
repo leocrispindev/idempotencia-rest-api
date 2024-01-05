@@ -5,9 +5,9 @@ import "encoding/json"
 type Status int
 
 const (
-	IN_PROCESS Status = 1
-	PROCESSED  Status = 2
-	ERROR_ON_PROCESS
+	IN_PROCESS       Status = 1
+	PROCESSED        Status = 2
+	ERROR_ON_PROCESS Status = 3
 )
 
 type CacheMessage struct {
@@ -16,6 +16,10 @@ type CacheMessage struct {
 }
 
 func (c *CacheMessage) InProccess() bool {
+	return c.ProcessStatus == PROCESSED || c.ProcessStatus == IN_PROCESS
+}
+
+func (c *CacheMessage) StatusError() bool {
 	return c.ProcessStatus == PROCESSED || c.ProcessStatus == IN_PROCESS
 }
 
