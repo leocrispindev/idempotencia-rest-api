@@ -16,12 +16,15 @@ var rdb *redis.Client
 
 func Init() {
 	rdb = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379", // Endereço padrão do Redis. Mude conforme necessário.
+		Addr: "localhost:6379",
 	})
 	_, err := rdb.Ping(context.Background()).Result()
+
 	if err != nil {
 		log.Fatalf("Fail on connect to Redis: %v", err)
 	}
+
+	log.Println("Cache ok")
 }
 
 func Set(key string, value string, expiration int) {
