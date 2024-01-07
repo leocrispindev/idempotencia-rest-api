@@ -62,9 +62,7 @@ func RegistryMessage(c *gin.Context) {
 		return
 	}
 
-	c.JSON(204, model.ResponseSuccess{
-		Text: cacheMessage.Message,
-	})
+	c.JSON(204, c)
 }
 
 func hasIdempotenciakey(headers http.Header) (bool, string) {
