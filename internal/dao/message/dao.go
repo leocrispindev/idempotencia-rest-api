@@ -13,10 +13,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 )
 
-// TODO registro no banco
-// TODO consulta no banco
+var connection *mongo.Database
 
-var connection = database.GetConnection()
+func Init() {
+	connection = database.GetConnection()
+}
 
 func AlreadyProcessed(key string) (bool, error) {
 	// TODO implementar busca no banco
