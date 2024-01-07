@@ -8,7 +8,7 @@ import (
 )
 
 func Init() {
-
+	messageDao.Init()
 }
 
 func GetAll() []interface{} {
@@ -20,18 +20,18 @@ func ProccessMessage(message model.Message) error {
 		return nil
 	}
 
-	saveOnCache(message.IdempotenciaKey, model.IN_PROCESS, "Message in process", 600) // 10 minutes cache duration
+	saveOnCache(message.IdempotenciaKey, model.IN_PROCESS, "Message in process", 60) // seconds
 
 	err := messageDao.SaveMessage(message)
 
 	if err != nil {
 		log.Printf("Error on save message, [ID]= %s  [error]=%s", message.IdempotenciaKey, err.Error())
 
-		go saveOnCache(message.IdempotenciaKey, model.ERROR_ON_PROCESS, "Error on save message", 600) // 10 minutes cache duration
+		saveOnCache(message.IdempotenciaKey, model.ERROR_ON_PROCESS, "Error on save message", 600)
 
 	}
 
-	go saveOnCache(message.IdempotenciaKey, model.PROCESSED, "Prcessed with success", 60)
+	go saveOnCache(message.IdempotenciaKey, model.PROCESSED, "Save with success", 60)
 
 	return err
 }
