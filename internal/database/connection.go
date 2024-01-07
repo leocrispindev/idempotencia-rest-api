@@ -3,37 +3,40 @@ package database
 import (
 	"context"
 	"fmt"
+	"log"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-const uri = "mongodb://admin:admin1@localhost"
+const uri = "mongodb://127.0.0.1:27017/sample_messages?authSource=admin"
 
 var connection *mongo.Database
 
 func Init() {
-	//open()
+	open()
 }
 
 func open() {
-	versionAPI := options.ServerAPI(options.ServerAPIVersion1)
 
-	options := options.Client().ApplyURI(uri).SetServerAPIOptions(versionAPI)
+	// Configure as opções de conexão
+	clientOptions := options.Client().ApplyURI(uri)
 
-	client, err := mongo.Connect(context.TODO(), options)
-
-	fmt.Println(client.ListDatabaseNames(context.TODO(), bson.D{}))
-
+	// Conecte-se ao MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	connection = client.Database("messages")
-	fmt.Println(connection.Client().Ping(context.TODO(), &readpref.ReadPref{}))
-	//fmt.Println(connection.Client().ListDatabaseNames(context.TODO(), bson.D{}))
+	// Verifique a conexão
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	connection = client.Database("sample_messages")
+
+	fmt.Println("Conectado ao MongoDB!")
 }
 
 func GetConnection() *mongo.Database {
