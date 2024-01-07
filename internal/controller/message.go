@@ -24,7 +24,7 @@ func RegistryMessage(c *gin.Context) {
 	found, idempotenciaKey := hasIdempotenciakey(c.Request.Header)
 
 	if !found {
-		c.JSON(400, model.Error{
+		c.JSON(400, model.ResponseError{
 			Text: "Header idempotencia key not found",
 		})
 		return
@@ -33,7 +33,7 @@ func RegistryMessage(c *gin.Context) {
 	err := c.BindJSON(&message.Info)
 
 	if err != nil {
-		c.JSON(400, model.Error{
+		c.JSON(400, model.ResponseError{
 			Text: "Error on parse body " + err.Error(),
 		})
 		return
@@ -48,7 +48,7 @@ func RegistryMessage(c *gin.Context) {
 	}
 
 	if cacheMessage.StatusError() {
-		c.JSON(500, model.Error{
+		c.JSON(500, model.ResponseError{
 			Text: cacheMessage.Message,
 		})
 	}
@@ -56,13 +56,15 @@ func RegistryMessage(c *gin.Context) {
 	err = process.ProccessMessage(message)
 
 	if err != nil {
-		c.JSON(500, model.Error{
+		c.JSON(500, model.ResponseError{
 			Text: "Registry message error",
 		})
 		return
 	}
 
-	c.JSON(204, nil)
+	c.JSON(204, model.ResponseSuccess{
+		Text: cacheMessage.Message,
+	})
 }
 
 func hasIdempotenciakey(headers http.Header) (bool, string) {
