@@ -6,5 +6,5 @@ type ResponseError struct {
 
 type ResponseSuccess struct {
 	Text string      `json:"message"`
-	Data interface{} `json:"data, omitonempty"`
+	Data interface{} `json:"data,omitempty"`
 }
