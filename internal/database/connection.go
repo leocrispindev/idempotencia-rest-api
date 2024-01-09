@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const uri = "mongodb://127.0.0.1:27017/sample_messages?authSource=admin"
+const uri = "mongodb://mongo1.member.host:27017/sample_messages?authSource=admin"
 
 var connection *mongo.Database
 
