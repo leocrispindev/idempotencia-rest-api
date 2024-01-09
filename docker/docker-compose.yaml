@@ -1,6 +1,15 @@
 version: "3.8"
 
 services:
+  idempotencia-api-rest:  
+    build: 
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - api_network
+        
   redis:
     image: "redis:latest"
     container_name: "redis-idempotencia-project"
@@ -9,6 +18,10 @@ services:
     volumes:
       - ./redis-data:/data
     command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      api_network:
+        aliases:
+          - redis
     
   mongo1:
     image: mongo:7.0
@@ -18,7 +31,7 @@ services:
     extra_hosts:
       - "mongo.member.host:host-gateway"
     healthcheck:
-      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo.member.host:27017',priority:1},{_id:1,host:'mongo.member.host:27018',priority:0.5},{_id:2,host:'mongo.member.host:27019',priority:0.5}]}) }" | mongosh --port 27017 --quiet
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo1.member.host:27017',priority:1},{_id:1,host:'mongo2.member.host:27018',priority:0.5},{_id:2,host:'mongo3.member.host:27019',priority:0.5}]}) }"
       interval: 5s
       timeout: 30s
       start_period: 0s
@@ -26,6 +39,10 @@ services:
       retries: 30
     volumes:
       - "mongo1_data:/data/db"
+    networks:
+      api_network:
+        aliases:
+          - mongo1.member.host
 
   mongo2:
     image: mongo:7.0
@@ -36,7 +53,10 @@ services:
       - "mongo.member.host:host-gateway"
     volumes:
       - "mongo2_data:/data/db"
-
+    networks:
+      api_network:
+        aliases:
+          - mongo2.member.host
 
   mongo3:
     image: mongo:7.0
@@ -47,9 +67,16 @@ services:
       - "mongo.member.host:host-gateway"
     volumes:
       - "mongo3_data:/data/db"
+    networks:
+      api_network:
+        aliases:
+          - mongo3.member.host
 
 volumes:
   mongo1_data:
   mongo2_data:
   mongo3_data:
   redis_data:
+
+networks:
+  api_network:
