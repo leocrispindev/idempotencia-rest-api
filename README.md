@@ -44,3 +44,45 @@ Na primeira etapa, a API efetua uma consulta em um cache específico, verificand
 ### Segunda validação - Banco de Dados:
 Caso a chave não seja encontrada ou haja, ocorre a segunda etapa. 
 É realizada uma consulta ao banco de dados para garantir que a chave não foi processada, caso não seja encontrada, a mensagem é salva no banco de dados, garantindo assim a integridade e singularidade dos dados.
+
+## Execução
+
+* Docker(buildando a imagem da api)
+```
+  docker-compose up -d --build
+```
+
+## Uso
+
+### Exemplo: 
+``` bash 
+curl -X POST \
+     -H "Content-Type: application/json" -H "Idempotencia-key: uuidteste1" \  
+     -d '{
+        "from": "Alice",
+        "to": "Bob",
+        "content": "Olá, Bob! Como você está?"
+      }' \
+     http://localhost:8080/rest/registry
+```
+#### Response de sucesso
+* Status 201: created
+* Status 200: success(conteudo em cache)
+
+#### Response de key não enviada
+* Status 400:
+``` bash 
+{
+    "message": "Header idempotencia key not found"
+}  
+```
+
+#### Response de error
+* Status 500:
+``` bash 
+{
+    "message": "Registry message erro"
+}  
+```
+
+

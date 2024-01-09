@@ -7,8 +7,12 @@ services:
       dockerfile: ./docker/Dockerfile
     ports:
       - "8080:8080"
+    depends_on:
+      - mongo1
     networks:
-      - api_network
+      api_network:
+        aliases:
+          - api-rest
         
   redis:
     image: "redis:latest"
@@ -28,10 +32,8 @@ services:
     command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
     ports:
       - 27017:27017
-    extra_hosts:
-      - "mongo.member.host:host-gateway"
     healthcheck:
-      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo1.member.host:27017',priority:1},{_id:1,host:'mongo2.member.host:27018',priority:0.5},{_id:2,host:'mongo3.member.host:27019',priority:0.5}]}) }"
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo1.member.host:27017',priority:1},{_id:1,host:'mongo2.member.host:27018',priority:0.5},{_id:2,host:'mongo3.member.host:27019',priority:0.5}]}) }" | mongosh --port 27017 --quiet
       interval: 5s
       timeout: 30s
       start_period: 0s
@@ -49,8 +51,6 @@ services:
     command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27018"]
     ports:
       - 27018:27018
-    extra_hosts:
-      - "mongo.member.host:host-gateway"
     volumes:
       - "mongo2_data:/data/db"
     networks:
@@ -63,8 +63,6 @@ services:
     command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27019"]
     ports:
       - 27019:27019
-    extra_hosts:
-      - "mongo.member.host:host-gateway"
     volumes:
       - "mongo3_data:/data/db"
     networks:
