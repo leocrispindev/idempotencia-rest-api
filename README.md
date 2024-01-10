@@ -57,13 +57,15 @@ Caso a chave não seja encontrada ou haja, ocorre a segunda etapa.
 ### Exemplo: 
 ``` bash 
 curl -X POST \
-     -H "Content-Type: application/json" -H "Idempotencia-key: uuidteste1" \  
+     -H "Content-Type: application/json" \
+     -H "Idempotencia-key: uuidteste1" \
      -d '{
-        "from": "Alice",
-        "to": "Bob",
-        "content": "Olá, Bob! Como você está?"
-      }' \
+          "from": "Alice",
+          "to": "Bob",
+          "content": "Olá, Bob! Como você está?"
+        }' \
      http://localhost:8080/rest/registry
+
 ```
 #### Response de sucesso
 * Status 201: created
