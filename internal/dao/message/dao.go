@@ -13,15 +13,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 )
 
-var connection *mongo.Database
-
-func Init() {
-	connection = database.GetConnection()
-}
-
 func AlreadyProcessed(key string) (bool, error) {
 	// TODO implementar busca no banco
-	collection := connection.Collection("message")
+	collection := database.GetConnection().Collection("message")
 
 	result := collection.FindOne(context.TODO(), bson.M{"idempotenciaKey": key})
 
@@ -30,7 +24,6 @@ func AlreadyProcessed(key string) (bool, error) {
 	err := result.Decode(&messageAlready)
 
 	if err != nil {
-		log.Println(err)
 		return false, err
 	}
 
@@ -40,7 +33,7 @@ func AlreadyProcessed(key string) (bool, error) {
 func GetAllMessages() []interface{} {
 	var result []interface{}
 
-	coll := connection.Collection("message")
+	coll := database.GetConnection().Collection("message")
 
 	cursor, err := coll.Find(context.TODO(), bson.D{})
 
@@ -59,13 +52,13 @@ func SaveMessage(message model.Message) error {
 	wc := writeconcern.Majority()
 	txnOptions := options.Transaction().SetWriteConcern(wc)
 
-	mongoSession, err := connection.Client().StartSession()
+	mongoSession, err := database.GetConnection().Client().StartSession()
 	if err != nil {
 		return err
 	}
 	defer mongoSession.EndSession(context.TODO())
 
-	coll := connection.Collection("message")
+	coll := database.GetConnection().Collection("message")
 
 	_, err = mongoSession.WithTransaction(context.TODO(), func(ctx mongo.SessionContext) (interface{}, error) {
 		log.Println("Transaction started")
