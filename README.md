@@ -80,7 +80,7 @@ curl -X POST \
 * Status 400:
 ``` bash 
 {
-    "message": "Header idempotencia key not found"
+    "message": "Key not found"
 }  
 ```
 
