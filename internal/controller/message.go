@@ -9,64 +9,51 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Init() {
-	process.Init()
+func SetupMessagesRoutes(r *gin.Engine) {
+	r.GET("/rest/list/all", getList)
+	r.POST("/rest/registry", registryMessage)
 }
 
-func GetList(c *gin.Context) {
+func getList(c *gin.Context) {
 	c.JSON(200, process.GetAll())
-
 }
 
-func RegistryMessage(c *gin.Context) {
-	message := model.Message{}
+func registryMessage(c *gin.Context) {
 
 	found, idempotenciaKey := hasIdempotenciakey(c.Request.Header)
 
 	if !found {
-		c.JSON(http.StatusBadRequest, model.ResponseError{
-			Text: "Header idempotencia key not found",
-		})
-		return
+		sendBadRequestResponse(c, "Key not found")
 	}
+
+	cacheMessage, _ := cache.IsOnCache(idempotenciaKey)
+
+	if cacheMessage.InProccess() {
+		sendSuccessResponse(c, cacheMessage.Message)
+	}
+
+	// Se houver um erro no status
+	if cacheMessage.StatusError() {
+		sendErrorResponse(c, cacheMessage.Message)
+	}
+
+	message := model.Message{}
+	message.IdempotenciaKey = idempotenciaKey
 
 	err := c.BindJSON(&message.Info)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, model.ResponseError{
-			Text: "Error on parse body " + err.Error(),
-		})
-		return
-	}
-
-	message.IdempotenciaKey = idempotenciaKey
-
-	cacheMessage, err := cache.IsOnCache(message.IdempotenciaKey)
-
-	if err == nil && cacheMessage.InProccess() {
-		c.JSON(http.StatusOK, model.ResponseSuccess{
-			Text: cacheMessage.Message,
-		})
-		return
-	}
-
-	if cacheMessage.StatusError() {
-		c.JSON(http.StatusInternalServerError, model.ResponseError{
-			Text: cacheMessage.Message,
-		})
-		return
+		sendBadRequestResponse(c, "Error on parse body "+err.Error())
 	}
 
 	err = process.ProccessMessage(message)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, model.ResponseError{
-			Text: "Registry message error",
-		})
-		return
+		sendErrorResponse(c, "Registry message error")
 	}
 
-	c.JSON(http.StatusCreated, c)
+	c.Status(http.StatusCreated)
+	c.Abort()
 }
 
 func hasIdempotenciakey(headers http.Header) (bool, string) {
