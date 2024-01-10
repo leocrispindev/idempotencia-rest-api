@@ -9,16 +9,17 @@ import (
 )
 
 func main() {
-	database.Init()
-	cache.Init()
-	controller.Init()
+	InitConnections()
 
 	r := gin.Default()
 
-	r.GET("/rest/list/all", controller.GetList)
-
-	// Without Idempotencia
-	r.POST("/rest/registry", controller.RegistryMessage)
+	controller.InitRoutes(r)
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+}
+
+func InitConnections() {
+	database.Init()
+	cache.Init()
+
 }
