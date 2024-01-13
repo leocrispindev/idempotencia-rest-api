@@ -2,7 +2,6 @@ package controller
 
 import (
 	"api-handle/internal/model"
-	"api-handle/internal/services/cache"
 	"api-handle/internal/services/process"
 	"net/http"
 
@@ -26,17 +25,6 @@ func registryMessage(c *gin.Context) {
 		sendBadRequestResponse(c, "Key not found")
 	}
 
-	cacheMessage, _ := cache.IsOnCache(idempotenciaKey)
-
-	if cacheMessage.InProccess() {
-		sendSuccessResponse(c, cacheMessage.Message)
-	}
-
-	// Se houver um erro no status
-	if cacheMessage.StatusError() {
-		sendErrorResponse(c, cacheMessage.Message)
-	}
-
 	message := model.Message{}
 	message.IdempotenciaKey = idempotenciaKey
 
@@ -52,7 +40,7 @@ func registryMessage(c *gin.Context) {
 		sendErrorResponse(c, "Registry message error")
 	}
 
-	c.Status(http.StatusCreated)
+	sendSuccessResponse(c, "Success")
 	c.Abort()
 }
 

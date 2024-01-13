@@ -27,18 +27,26 @@ func Init() {
 	log.Println("Cache ok")
 }
 
-func Set(key string, value string, expiration int) {
+func Set(key string, value string, expiration int) error {
 	if utils.IsStringEmpty(value) || utils.IsStringEmpty(key) || expiration < 0 {
-		return
+		return fmt.Errorf("Key or value is empty")
 	}
 
 	durationUtilExpire := time.Duration(expiration) * time.Second
 
-	err := rdb.Set(context.TODO(), key, value, durationUtilExpire).Err()
+	return rdb.Set(context.TODO(), key, value, durationUtilExpire).Err()
 
-	if err != nil {
-		log.Printf("Fail set value on redis: %s", err.Error())
+}
+
+func SetNotExist(key string, value string, expiration int) error {
+	if utils.IsStringEmpty(value) || utils.IsStringEmpty(key) || expiration < 0 {
+		return fmt.Errorf("Key or value is empty")
 	}
+
+	durationUtilExpire := time.Duration(expiration) * time.Second
+
+	return rdb.SetNX(context.TODO(), key, value, durationUtilExpire).Err()
+
 }
 
 func Retrieve(key string) (string, error) {

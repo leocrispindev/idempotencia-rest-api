@@ -23,6 +23,11 @@ func (c *CacheMessage) StatusError() bool {
 	return c.ProcessStatus == PROCESSED || c.ProcessStatus == IN_PROCESS
 }
 
+func (c *CacheMessage) UpdateStatus(status Status, message string) {
+	c.ProcessStatus = status
+	c.Message = message
+}
+
 func (c *CacheMessage) ToJson() string {
 	data, err := json.Marshal(c)
 

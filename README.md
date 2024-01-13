@@ -68,8 +68,7 @@ curl -X POST \
 
 ```
 #### Response de sucesso
-* Status 201: created
-* Status 200: success(conteudo em cache)
+* Status 200: success
 ``` bash 
 {
     "message": "Save with success"

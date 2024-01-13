@@ -4,7 +4,10 @@ import (
 	messageDao "api-handle/internal/dao/message"
 	"api-handle/internal/model"
 	"api-handle/internal/services/cache"
+	"fmt"
 	"log"
+
+	"github.com/redis/go-redis/v9"
 )
 
 func GetAll() []interface{} {
@@ -12,22 +15,38 @@ func GetAll() []interface{} {
 }
 
 func ProccessMessage(message model.Message) error {
-	if messageAlreadyProcessed(message.IdempotenciaKey) {
+	cacheMessage, err := cache.IsOnCache(message.IdempotenciaKey)
+
+	if err == nil && cacheMessage.StatusError() {
+		return fmt.Errorf(cacheMessage.Message)
+	}
+
+	if (err == nil && cacheMessage.InProccess()) || messageAlreadyProcessed(message.IdempotenciaKey) {
 		return nil
 	}
 
-	saveOnCache(message.IdempotenciaKey, model.IN_PROCESS, "Message in process", 6) // seconds
+	cacheMessage = createCacheMessageModel(model.IN_PROCESS, "Message in process")
 
-	err := messageDao.SaveMessage(message)
+	err = cache.SetNotExist("inproccess:"+message.IdempotenciaKey, cacheMessage.ToJson(), 6*1000) // seconds
+
+	//Key already exist on redis
+	if err == redis.Nil {
+		return nil
+	}
+
+	err = messageDao.SaveMessage(message)
 
 	if err != nil {
 		log.Printf("Error on save message, [ID]= %s  [error]=%s", message.IdempotenciaKey, err.Error())
 
-		saveOnCache(message.IdempotenciaKey, model.ERROR_ON_PROCESS, "Error on save message", 60)
+		cacheMessage.UpdateStatus(model.ERROR_ON_PROCESS, "Error on save message")
+
+		cache.Set(message.IdempotenciaKey, cacheMessage.ToJson(), 60*1000)
 
 	}
 
-	saveOnCache(message.IdempotenciaKey, model.PROCESSED, "Save with success", 60)
+	cacheMessage.UpdateStatus(model.PROCESSED, "Save with success")
+	cache.Set(message.IdempotenciaKey, cacheMessage.ToJson(), 60*1000)
 
 	return err
 }
@@ -44,12 +63,9 @@ func messageAlreadyProcessed(key string) bool {
 
 }
 
-func saveOnCache(key string, status model.Status, message string, duration int) {
-	cacheMessage := model.CacheMessage{
+func createCacheMessageModel(status model.Status, message string) model.CacheMessage {
+	return model.CacheMessage{
 		ProcessStatus: status,
 		Message:       message,
 	}
-
-	cache.Set(key, cacheMessage.ToJson(), duration*1000)
-
 }
